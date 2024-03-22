@@ -39,3 +39,11 @@ This project implements a Smart Parking System using an ESP8266 microcontroller,
 
 ### Demo Video
 - See the Smart Parking System in action: [Demo Video](https://www.youtube.com/watch?v=odxMqw8v5l0)
+
+## Contributing
+
+Contributions are welcome! If you have any suggestions, improvements, or bug fixes, feel free to open an issue or submit a pull request.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
