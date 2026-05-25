@@ -1,49 +1,79 @@
-## ESP8266 Smart Parking Websocket Server
+# Smart Parking — ESP8266 firmware
 
-This project implements a Smart Parking System using an ESP8266 microcontroller, infrared sensors, and servos. It allows monitoring parking spaces, controlling entry and exit gates, and communicating status updates via WebSocket.
+PlatformIO firmware for an ESP8266-based smart parking installation. Exposes a JSON-over-WebSocket API for monitoring four parking bays and controlling entry/exit gates. Pairs with the companion [Smart Parking App](https://github.com/mazen-salah/Smart-Parking-App).
 
-### Hardware Requirements
-- ESP8266 microcontroller
-- Infrared sensors
-- Servos
-- Power supply
-- Gates (for entry and exit)
+## Architecture
 
-### Software Dependencies
-- `Servo.h`: Arduino Servo library for controlling servos.
-- `ESP8266WiFi.h`: ESP8266WiFi library for connecting to WiFi networks.
-- `WebSocketsServer.h`: WebSocketsServer library for WebSocket communication.
+```
+src/
+├── main.cpp              # setup / loop, WebSocket event routing
+├── Config.h              # Wi-Fi, pin map, timing constants
+├── Gate.h / Gate.cpp     # Servo gate with non-blocking auto-close
+├── ParkingSensor.h/.cpp  # IR occupancy detector with debounce
+└── MessageProtocol.h/.cpp# JSON encoders + client-command decoder
+docs/
+└── PROTOCOL.md           # Wire-format reference
+```
 
-### Setup
-1. Connect the hardware components as per the provided schematic.
-2. Upload the provided code to the ESP8266 microcontroller.
-3. Ensure the infrared sensors are appropriately positioned to detect vehicle presence.
-4. Adjust the gate servo positions if necessary for proper opening and closing.
+Each subsystem is a small class with a single responsibility. `main.cpp` only wires them together — no business logic.
 
-### Configuration
-- Set the WiFi network credentials in the code:
-  ```cpp
-  const char *ssid = "Smart Parking";
-  const char *pass = "m123456789";
-  ```
-- Ensure correct pin assignments for IR sensors, servos, and gate control pins.
+## Hardware
 
-### Operation
-- The system monitors parking spaces and gate entrances/exits continuously.
-- WebSocket communication allows real-time updates on parking space occupancy and gate status.
-- The system automatically opens gates upon vehicle detection and closes them after a delay.
+| Component        | NodeMCU pin | GPIO |
+|------------------|-------------|------|
+| Parking 1 IR     | D2          | 4    |
+| Parking 2 IR     | D3          | 0    |
+| Parking 3 IR     | D4          | 2    |
+| Parking 4 IR     | D5          | 14   |
+| Entry gate IR    | D1          | 5    |
+| Exit gate IR     | D6          | 12   |
+| Entry gate servo | D0          | 16   |
+| Exit gate servo  | D7          | 13   |
 
-### Flutter Application
-- A companion Flutter application is available for monitoring and controlling the Smart Parking System.
-- Repository link: [Smart Parking App](https://github.com/mazen-salah/Smart-Parking-App)
+Pins are defined in [`src/Config.h`](src/Config.h); change them there.
 
-### Demo Video
-- See the Smart Parking System in action: [Demo Video](https://www.youtube.com/watch?v=odxMqw8v5l0)
+## Build & flash
 
-## Contributing
+This project uses [PlatformIO](https://platformio.org). Install the PlatformIO CLI or the VS Code extension, then:
 
-Contributions are welcome! If you have any suggestions, improvements, or bug fixes, feel free to open an issue or submit a pull request.
+```bash
+# Build
+pio run
+
+# Flash over USB
+pio run -t upload
+
+# Open the serial monitor (115200 baud)
+pio device monitor
+```
+
+PlatformIO will auto-install the three required libraries the first time you build:
+
+- `links2004/WebSockets` (^2.4.1)
+- `bblanchon/ArduinoJson` (^7.0.4)
+- `arduino-libraries/Servo` (^1.2.2)
+
+## Wi-Fi
+
+The firmware starts a soft access point:
+
+| Setting | Default |
+|---------|---------|
+| SSID    | `Smart Parking` |
+| Password| `m123456789` |
+| IP      | `192.168.0.1` |
+| WS port | `81` |
+
+Override the defaults by editing `AP_SSID`, `AP_PASSWORD`, `AP_IP` in `src/Config.h`.
+
+## Protocol
+
+See [`docs/PROTOCOL.md`](docs/PROTOCOL.md) for the full JSON message contract used by both this firmware and the companion app.
+
+## Demo
+
+[![Demo Video](https://img.youtube.com/vi/odxMqw8v5l0/0.jpg)](https://www.youtube.com/watch?v=odxMqw8v5l0)
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).
